@@ -47,8 +47,10 @@ def usage():
 class Options:
     def __init__(self, argv=sys.argv[1:]):
         try:
-            shortopts, longopts = getopt.getopt(argv, 't:l:q',
-                                                ['--traefik-container-name='])
+            shortopts, longopts = getopt.getopt(
+                argv,
+                't:l:q',
+                ['traefik-container-name=', 'label=', 'healthy'])
         except getopt.GetoptError:
             usage()
 
