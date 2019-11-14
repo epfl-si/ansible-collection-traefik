@@ -305,9 +305,6 @@ def render_table_ala_docker_ps(traefik, containers):
 
     for c in containers:
         bi = traefik.find_backend_info(c)
-        if not bi:
-            continue
-
         display_line = ""
         for width, value in zip(
                 columns,
@@ -341,6 +338,8 @@ def main(opts=None):
 
     def show_this_container(opts, traefik, d):
         bi = traefik.find_backend_info(d)
+        if not bi:
+            return False
         if opts.filter_unhealthy and not bi.healthy:
             return False
         if len(opts.label_filters):
