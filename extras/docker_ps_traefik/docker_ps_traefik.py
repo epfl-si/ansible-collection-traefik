@@ -228,9 +228,9 @@ class Traefik:
                         '--network', self.network.name,
                         'busybox', 'sh', '-c', """
 echo "===== TRAEFIK API ====="
-wget -q -O- %s/api/providers/docker
+wget -q -O- %s/api/providers/docker 2>&1 || true
 echo "===== PROMETHEUS ====="
-wget -q -O- %s/metrics
+wget -q -O- %s/metrics 2>&1 || true
 """ % (traefik_api_url_prefix, traefik_api_url_prefix)])
 
         matched = re.match('===== TRAEFIK API =====\n(.*)===== PROMETHEUS =====(.*)$',
@@ -239,11 +239,14 @@ wget -q -O- %s/metrics
             raise ValueError(u(cmd.stdout))
 
         (traefik_api, prometheus) = matched.groups()
-        if traefik_api.startswith("404 page not found"):
+        if self._wget_response_is_404(traefik_api):
             raise TraefikConfigurationError('/api/providers/docker')
-        if prometheus.startswith("404 page not found"):
+        if self._wget_response_is_404(prometheus):
             raise TraefikConfigurationError('/metrics')
         return (traefik_api, prometheus)
+
+    def _wget_response_is_404(self, wget_response):
+        return "404 not found" in wget_response.lower()
 
     def find_backend_info(self, container):
         ip = container.ip_in_network(self.network)
