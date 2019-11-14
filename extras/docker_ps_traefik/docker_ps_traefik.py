@@ -256,7 +256,7 @@ wget -q -O- %s/metrics 2>&1 || true
             return None
 
         for backend in self.BackendInfo.all(self):
-            if str(backend.ip) == str(ip):
+            if str(ip) in backend.ips:
                 return backend
 
     class BackendInfo:
@@ -276,18 +276,15 @@ wget -q -O- %s/metrics 2>&1 || true
                             for name in traefik._api_state()[u'backends'].keys()]
             return cls._all
 
-        @property
-        def _traefik_server_info(self):
-            k = list(self._traefik_api_info['servers'].keys())
-            assert len(k) == 1
-            return self._traefik_api_info['servers'][k[0]]
-
         @cached_property
-        def ip(self):
-            url = self._traefik_server_info[u'url']
-            matched = re.match('^http://([0-9.]+)(?:[:/]|$)', url)
-            if matched:
-                return matched.group(1)
+        def ips(self):
+            ips = []
+            for server_info in self._traefik_api_info['servers'].values():
+                url = server_info[u'url']
+                matched = re.match('^http://([0-9.]+)(?:[:/]|$)', url)
+                if matched:
+                    ips.append(matched.group(1))
+            return ips
 
         @property
         def healthy(self):
