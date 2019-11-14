@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; -*-
+# -*- coding: utf-8; -*-
 # Tested with python 2.7.2 too
 
 """%(0)s - Query Traefik to figure out the state of Docker backends
