@@ -162,14 +162,16 @@ class DockerContainer:
     def status(self):
         return self.state[u'State'][u'Status']
 
-    def has_label(self, key_or_keyvalue, value=None):
-        if value is None:
-            key, value = re.match('^(.*?)=(.*)$', key_or_keyvalue).groups()
+    def has_label(self, key_or_keyvalue):
+        matched = re.match('^(.*?)=(.*)$', key_or_keyvalue)
+        if matched:
+            key, value = matched.groups()
         else:
             key = key_or_keyvalue
+            value = None
 
         for k, v in self.state[u'Config'][u'Labels'].items():
-            if u(k) == u(key) and u(v) == u(value):
+            if u(k) == u(key) and (value is None or u(v) == u(value)):
                 return True
         return False
 
