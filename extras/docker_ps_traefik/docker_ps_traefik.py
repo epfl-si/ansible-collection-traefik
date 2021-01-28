@@ -247,7 +247,7 @@ class Traefik:
         if api_service is None:
             return None
 
-        serverStatus = api_service['serverStatus']
+        serverStatus = api_service.get('serverStatus', {})
         up_count = sum(1 for v in serverStatus.values() if v == 'UP')
 
         class ContainerState(object):
