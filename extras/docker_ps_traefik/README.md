@@ -6,7 +6,8 @@ besides what is found in the standard distribution.
 It works like `docker ps`, except there is an additional column to
 indicate container health (from Traefik's point of view).
 
-[traefik](https://traefik.io/) must be configured for [docker
+[Træfik](https://traefik.io/) version 2.0 or higher is required.
+Træfik must be configured for [docker
 integration](https://docs.traefik.io/providers/docker/), and it must
 have the API endpoint (`--api`) turned on.
 
