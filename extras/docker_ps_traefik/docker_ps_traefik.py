@@ -253,15 +253,28 @@ class Traefik:
         if not container_ip:
             return None
 
-        server_status = api_service.get('serverStatus', {})
-        container_urls_up = set(k for k, v in server_status.items()
-                                if v == 'UP' and re.search(r'\b%s\b' % container_ip, k))
-
         class ContainerState(object):
             pass
-
         state = ContainerState()
-        state.healthy = len(container_urls_up) >= 1
+
+        container_urls = set(
+            v['url'] for v in api_service.get('loadBalancer', {}).get('servers', {})
+            if 'url' in v and re.search(r'\b%s\b' % container_ip, v['url']))
+        if not container_urls:
+            # The Træfik service doesn't know about this container.
+            # It might be incorrectly routed (e.g. wrong `traefik.docker.network`,
+            # meaning we have been filtering by the wrong IP)
+            state.healthy = False
+        else:
+            server_status = api_service.get('serverStatus', None)
+            if server_status is None:
+                # This service doesn't do health checks.
+                state.healthy = True
+            else:
+                container_urls_up = set(k for k, v in server_status.items()
+                                        if v == 'UP' and k in container_urls)
+                state.healthy = len(container_urls_up) >= 1
+
         return state
 
 
