@@ -249,14 +249,19 @@ class Traefik:
         if api_service is None:
             return None
 
-        serverStatus = api_service.get('serverStatus', {})
-        up_count = sum(1 for v in serverStatus.values() if v == 'UP')
+        container_ip = container.ip_in_network(self.network)
+        if not container_ip:
+            return None
+
+        server_status = api_service.get('serverStatus', {})
+        container_urls_up = set(k for k, v in server_status.items()
+                                if v == 'UP' and re.search(r'\b%s\b' % container_ip, k))
 
         class ContainerState(object):
             pass
 
         state = ContainerState()
-        state.healthy = up_count >= 1
+        state.healthy = len(container_urls_up) >= 1
         return state
 
 
