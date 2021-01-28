@@ -2,7 +2,7 @@
 # -*- coding: utf-8; -*-
 # Tested with Python 2.7.2 and Python 3.6
 
-"""%(0)s - Query Traefik to figure out the state of Docker backends
+"""%(0)s - Query Traefik to figure out the state of Docker services
 
 Works more or less like `docker ps', but cross-references the Traefik
 state. Specifically,
@@ -171,8 +171,32 @@ class DockerContainer:
                 return True
         return False
 
+    def _traefik_service_labels(self):
+        for k, v in self.state[u'Config'][u'Labels'].items():
+            matched = re.match('^traefik\.(?P<protocol>http|tcp)\.services.(?P<name>\w+)\..*$', k)
+            if matched:
+                yield (matched, v)
+
+    @property
+    def traefik_service_name(self):
+        names = set(matched['name'] for (matched, v) in self._traefik_service_labels())
+        if len(names) > 2:
+            return None    # Træfik is going to disregard this container
+        elif len(names) == 1:
+            return sole(names)
+        else:
+            name = self.name
+            if name:
+                return re.sub('_', '-', name)
+            else:
+                return name
+
     def __repr__(self):
-        return '<%s id=%s "%s">' % (self.__class__.__name__, self.id, self.name)
+        traefik_service_name = self.traefik_service_name
+        return '<%s id=%s "%s" (service: %s)>' % (
+            self.__class__.__name__, self.id,
+            self.name,
+            "None" if traefik_service_name is None else '"%s"' % traefik_service_name)
 
 class DockerNetwork:
     def __init__(self, name, docker_inspect_struct):
@@ -186,13 +210,8 @@ class TraefikConfigurationError(Exception):
     def __init__(self, uri):
         super(TraefikConfigurationError, self).__init__("""Traefik is not configured to serve at %s.
 
-Please enable both API and Prometheus metrics serving:
-
-- pass --api command-line flag when starting Traefik
-- (for Traefik version 1.7) In traefik.toml, add an empty section that goes like
-
-  [metrics]
-    [metrics.prometheus]
+Please enable API serving in Træfik. For instructions refer to
+https://doc.traefik.io/traefik/operations/api/#insecure
 
 """ % uri)
 
@@ -204,107 +223,48 @@ class Traefik:
     def network(self):
         return self.container.network
 
-    def _api_state(self):
-        (api, _) = self._api_infos
-        return json.loads(api)
-
-    def _prometheus_state(self):
-        (_, prometheus) = self._api_infos
-        state = []
-        for line in prometheus.split("\n"):
-            matched = re.match('^traefik_backend_server_up{backend="(.*)",url="(.*)"} ([01])',
-                               line)
-            if not matched:
-                continue
-
-            (backend, url, health) = matched.groups()
-            state.append({'backend': backend, 'url': url, 'health': int(health)})
-
-        return state
-
     @cached_property
-    def _api_infos(self):
+    def _api_services(self):
         traefik_hostname_in_docker = '%s.%s' % (self.container.name, self.network.name)
         traefik_api_url_prefix = 'http://%s:8080' % (traefik_hostname_in_docker)
         cmd = Command(['docker', 'run', '--rm',
                         '--network', self.network.name,
-                        'busybox', 'sh', '-c', """
-echo "===== TRAEFIK API ====="
-wget -q -O- %s/api/providers/docker 2>&1 || true
-echo "===== PROMETHEUS ====="
-wget -q -O- %s/metrics 2>&1 || true
-""" % (traefik_api_url_prefix, traefik_api_url_prefix)])
+                        'busybox', 'sh', '-c', 
+                       "wget -q -O- %s/api/http/services 2>&1 || true" %
+                       traefik_api_url_prefix])
+        traefik_api = u(cmd.stdout)
 
-        matched = re.match('===== TRAEFIK API =====\n(.*)===== PROMETHEUS =====(.*)$',
-                           u(cmd.stdout), re.DOTALL)
-        if not matched:
-            raise ValueError(u(cmd.stdout))
+        if "404 not found" in traefik_api.lower():
+            raise TraefikConfigurationError('/api/http/services')
 
-        (traefik_api, prometheus) = matched.groups()
-        if self._wget_response_is_404(traefik_api):
-            raise TraefikConfigurationError('/api/providers/docker')
-        if self._wget_response_is_404(prometheus):
-            raise TraefikConfigurationError('/metrics')
-        return (traefik_api, prometheus)
+        return json.loads(traefik_api)
 
-    def _wget_response_is_404(self, wget_response):
-        return "404 not found" in wget_response.lower()
-
-    def find_backend_info(self, container):
-        ip = container.ip_in_network(self.network)
-        if ip is None:
+    def get_container_state(self, container):
+        api_service = sole(s for s in self._api_services
+                           if s['name'] == "%s@docker" % container.traefik_service_name)
+        if api_service is None:
             return None
 
-        for backend in self.BackendInfo.all(self):
-            if str(ip) in backend.ips:
-                return backend
+        serverStatus = api_service['serverStatus']
+        up_count = sum(1 for v in serverStatus.values() if v == 'UP')
 
-    class BackendInfo:
-        def __init__(self, traefik, name):
-            self.name = name
-            self._traefik_api_info = traefik._api_state()[u'backends'][u(name)]
-            self._prometheus_info = None
-            for prometheus_info in traefik._prometheus_state():
-                if str(prometheus_info['backend']) == str(name):
-                    self._prometheus_info = prometheus_info
-                    break
+        class ContainerState(object):
+            pass
 
-        @classmethod
-        def all(cls, traefik):
-            if not hasattr(cls, '_all'):
-                cls._all = [cls(traefik, name)
-                            for name in traefik._api_state()[u'backends'].keys()]
-            return cls._all
-
-        @cached_property
-        def ips(self):
-            ips = []
-            for server_info in self._traefik_api_info['servers'].values():
-                url = server_info[u'url']
-                matched = re.match('^http://([0-9.]+)(?:[:/]|$)', url)
-                if matched:
-                    ips.append(matched.group(1))
-            return ips
-
-        @property
-        def healthy(self):
-            return self._prometheus_info['health'] == 1
-
-        def __repr__(self):
-            return '<%s %s ip=%s health=%s>' % (
-                self.__class__.__name__, self.name,
-                self.ip, self._prometheus_info[u'health'])
+        state = ContainerState()
+        state.healthy = up_count >= 1
+        return state
 
 
 def render_table_ala_docker_ps(traefik, containers):
-    header = "CONTAINER ID        IMAGE                   COMMAND                  STATUS         HEALTHY  NAME"
+    header = "CONTAINER ID        IMAGE                   COMMAND                  STATUS   HEALTHY  TRAEFIK SVC NAME     NAME"
     print(header)
 
     columns = [0 if padding is None else len(title) + len(padding)
                for title, padding in pairwise(re.split('(  +)', header) + [None])]
 
     for c in containers:
-        bi = traefik.find_backend_info(c)
+        state = traefik.get_container_state(c)
         display_line = ""
         for width, value in zip(
                 columns,
@@ -312,7 +272,8 @@ def render_table_ala_docker_ps(traefik, containers):
                  c.image,
                  ' '.join(c.command),
                  c.status,
-                 u'✓' if bi.healthy else u'✗',
+                 u'✓' if state and state.healthy else u'✗' if state else u' ',
+                 c.traefik_service_name,
                  c.name]):
             display_value = value
             if width > 0:
@@ -331,16 +292,21 @@ def pairwise(iterable):
     else:                           # Python 3.x
         return zip(a, a)
 
+def sole(l):
+    l = list(l)
+    if len(l) == 1:
+        return l[0]
+    else:
+        return None
+
 def main(opts=None):
     if opts is None:
         opts = Options()
     traefik = Traefik(opts)
 
-    def show_this_container(opts, traefik, d):
-        bi = traefik.find_backend_info(d)
-        if not bi:
-            return False
-        if opts.filter_unhealthy and not bi.healthy:
+    def show_this_container(opts, traefik, c):
+        state = traefik.get_container_state(c)
+        if opts.filter_unhealthy and not (state and state.healthy):
             return False
         if len(opts.label_filters):
             for l in opts.label_filters:
@@ -349,8 +315,8 @@ def main(opts=None):
             return False
         return True
 
-    containers_to_show = [d for d in DockerContainer.all()
-                          if show_this_container(opts, traefik, d)]
+    containers_to_show = [c for c in DockerContainer.all()
+                          if show_this_container(opts, traefik, c)]
     if opts.terse_output:
         for d in containers_to_show:
             print(d.id)

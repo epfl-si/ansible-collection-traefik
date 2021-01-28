@@ -8,7 +8,7 @@ indicate container health (from Traefik's point of view).
 
 [traefik](https://traefik.io/) must be configured for [docker
 integration](https://docs.traefik.io/providers/docker/), and it must
-have both API (`--api`) and Prometheus turned on in its configuration.
+have the API endpoint (`--api`) turned on.
 
 Uses of this script:
 - as a systems administration tool
