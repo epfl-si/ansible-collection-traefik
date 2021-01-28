@@ -312,7 +312,7 @@ def main(opts=None):
             return False
         if len(opts.label_filters):
             for l in opts.label_filters:
-                if d.has_label(l):
+                if c.has_label(l):
                     return True
             return False
         return True
@@ -320,8 +320,8 @@ def main(opts=None):
     containers_to_show = [c for c in DockerContainer.all()
                           if show_this_container(opts, traefik, c)]
     if opts.terse_output:
-        for d in containers_to_show:
-            print(d.id)
+        for c in containers_to_show:
+            print(c.id)
     else:
         render_table_ala_docker_ps(traefik, containers_to_show)
 
