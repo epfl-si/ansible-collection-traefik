@@ -154,7 +154,9 @@ class DockerContainer:
 
     @property
     def command(self):
-        return self.state[u'Config'][u'Entrypoint'] + self.state[u'Config'][u'Cmd']
+        entrypoint = self.state[u'Config'][u'Entrypoint']
+        cmd = self.state[u'Config'][u'Cmd']
+        return (entrypoint or []) + (cmd or [])
 
     @property
     def status(self):
