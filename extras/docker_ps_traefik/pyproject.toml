@@ -1,0 +1,19 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "docker_ps_traefik"
+author = "EPFL IDEV-FSD team"
+author-email = "idevfsd@groupes.epfl.ch"
+home-page = "https://gitlab.com/epfl-idevfsd/docker_ps_traefik"
+description-file = "README.md"
+classifiers = ["License :: OSI Approved :: MIT License",
+            "Development Status :: 4 - Beta",
+            "Environment :: Console",
+            "Intended Audience :: System Administrators",
+            "Operating System :: MacOS :: MacOS X",
+            "Operating System :: POSIX :: Linux"
+            ]
+[tool.flit.scripts]
+docker-ps-traefik = "docker_ps_traefik:main"
