@@ -16,19 +16,18 @@ EXAMPLES = r"""
   epfl_si.traefik.docker_observer:
     name: some-cool-name  # Mandatory; will be used for both the image and the container
     volumes:
-      - /srv/traefik/dynamic:/traefik/dynamic
-    python_dependencies:
-      - pyyaml
-      - atomicwrites
+      - /srv/prometheus:/prometheus
     python_script: |
-      import yaml
-      from atomicwrites import atomic_write
-
       @on_docker_containers_changed
-      async def write_prometheus_static_discovery_file(docker_containers):
-          for container in containers:
-              details = await container.show()
-              ...
+      @to_yaml_file("/prometheus/docker-targets.yml")
+      @map_concat
+      async def prometheus_static_config_of_container (container):
+          details = await container.show()
+          ...
+          return dict(
+              targets=targets,
+              labels=dict(job=job, instance=instance))
+
 
 """
 
@@ -68,7 +67,7 @@ cd "$workdir"
 
   cat > Dockerfile <<"H3RE_DOCKERFILE"
 FROM python:slim
-RUN pip3 install aiodocker aiofile %(userdeps)s
+RUN pip3 install aiodocker aiofile pyyaml atomicwrites %(userdeps)s
 RUN mkdir /app
 COPY *.py /app/
 WORKDIR /app
@@ -78,12 +77,16 @@ H3RE_DOCKERFILE
 
   cat > docker_observer_lib.py <<"H3RE_DOCKER_OBSERVER_LIB"
 
+import os
+import yaml
 import asyncio
 from aiofile import async_open
+from atomicwrites import atomic_write
 import aiodocker
 from inspect import iscoroutinefunction
 
-__all__ = ('run_forever', 'on_docker_containers_changed')
+__all__ = ('run_forever', 'on_docker_containers_changed',
+           'to_yaml_file', 'map_concat')
 
 class DockerWatcher:
     def __init__ (self, docker):
@@ -105,15 +108,46 @@ def on_docker_containers_changed (f):
     callbacks.append(f)
     return f
 
+async def await_ (f, *args, **kwargs):
+    if iscoroutinefunction(f):
+        ret = await f(*args, **kwargs)
+    else:
+        ret = f(*args, **kwargs)
+    return ret
+
+def to_yaml_file (dest_path, mode=0o644):
+    def functor(f):
+        async def watcher_f (docker_containers):
+            struct = await await_(f, docker_containers)
+            with atomic_write(dest_path, overwrite=True) as write_fd:
+                write_fd.write(yaml.safe_dump(struct))
+            os.chmod(dest_path, mode)
+
+        return watcher_f
+
+    return functor
+
+def map_concat(f):
+    async def wrapper_f (things):
+        concat = []
+        for thing in things:
+            fragment = await await_(f, thing)
+            if fragment is None:
+                pass
+            elif isinstance(fragment, list):
+                concat.extend(fragment)
+            else:
+                concat.append(fragment)
+        return concat
+
+    return wrapper_f
+
 async def observe_changes_forever ():
     watch = DockerWatcher(aiodocker.Docker())
     while True:
         containers = await watch.containers_changed()
         for callback in callbacks:
-            if iscoroutinefunction(callback):
-                await callback(containers)
-            else:
-                callback(containers)
+            await await_(callback, containers)
 
 def run_forever (loop=None):
     if loop is None:
