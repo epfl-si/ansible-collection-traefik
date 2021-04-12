@@ -86,7 +86,7 @@ import aiodocker
 from inspect import iscoroutinefunction
 
 __all__ = ('run_forever', 'on_docker_containers_changed',
-           'to_yaml_file', 'map_concat')
+           'to_yaml_file', 'map_concat', 'write_yaml_file')
 
 class DockerWatcher:
     def __init__ (self, docker):
@@ -119,13 +119,16 @@ def to_yaml_file (dest_path, mode=0o644):
     def functor(f):
         async def watcher_f (docker_containers):
             struct = await await_(f, docker_containers)
-            with atomic_write(dest_path, overwrite=True) as write_fd:
-                write_fd.write(yaml.safe_dump(struct))
-            os.chmod(dest_path, mode)
+            write_yaml_file(struct, dest_path, mode)
 
         return watcher_f
 
     return functor
+
+def write_yaml_file (dest_path, struct, mode=0o644):
+    with atomic_write(dest_path, overwrite=True) as write_fd:
+        write_fd.write(yaml.safe_dump(struct))
+    os.chmod(dest_path, mode)
 
 def map_concat(f):
     async def wrapper_f (things):
