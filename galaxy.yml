@@ -8,7 +8,6 @@ license:
     - "MIT"
 tags:
     - traefik
-    - træfik
 repository: "https://github.com/epfl-si/ansible-collection-traefik"
 dependencies:
   epfl_si.actions: ">=0.1.1"
