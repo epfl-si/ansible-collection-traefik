@@ -10,13 +10,12 @@ Run Træfik in Docker, for Docker.
 
 [More...](roles/docker_traefik/README.md)
 
-## `epfl_si.traefik.docker_observer` Action Class
-
-The poor man's function-as-a-service in a Docker container. Can use
-any language you want, as long as it's Python.
-
 ## `docker-ps-traefik` script
 
 This git repository is also home to the
 [`docker-ps-traefik`](https://pypi.org/project/docker_ps_traefik/)
 script living on PyPI.
+
+## ~~`epfl_si.traefik.docker_observer` Action Class~~
+
+Moved to the [epfl_si.docker](https://galaxy.ansible.com/epfl_si/docker) Ansible collection
