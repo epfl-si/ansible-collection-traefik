@@ -10,6 +10,12 @@ Run Træfik in Docker, for Docker.
 
 [More...](roles/docker_traefik/README.md)
 
+## `epfl_si.traefik.docker_container_rollover` Role
+
+Effect a zero-downtime rollover with Docker and Træfik labels
+
+[More...](roles/docker_container_rollover/README.md)
+
 ## `docker-ps-traefik` script
 
 This git repository is also home to the

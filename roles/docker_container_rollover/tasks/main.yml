@@ -1,0 +1,89 @@
+- name: "Find highest running serial number"
+  changed_when: false  # Read-only command
+  check_mode: false    # Meaning exactly the opposite, #thanksansible
+  shell:
+    executable: /bin/bash
+    cmd: |
+      set -e -x
+      set -o pipefail
+      docker ps -q | \
+        xargs docker inspect | \
+        jq -s 'flatten(1)'   | \
+        jq '(map(
+               select(.Config.Labels | has("{{ unique_label }}"))
+                      | .Name | match("\\d+") | .string | tonumber )
+            ) | max'
+  register: _docker_container_rollover_last_serial
+
+- name: "Is the {{ container_spec.name }} container up-to-date?"
+  check_mode: true     # Always check, never effect the change
+  when: |
+    (_docker_container_rollover_last_serial is defined)
+    and
+    (_docker_container_rollover_last_serial.stdout != "null")
+  # Given the sorry state of
+  # https://github.com/ansible/ansible/issues/62847, no, we're not
+  # interested in a fully-qualified task name on next line (sorry, not
+  # sorry):
+  docker_container: "{{ container_spec }}"
+  vars:
+    serial: >-
+      {{ _docker_container_rollover_last_serial.stdout | int }}
+  register: _docker_container_rollover_check
+
+- name: "Start or update the {{ container_spec.name }} container"
+  when: |
+    (_docker_container_rollover_check is skipped)
+    or
+    (_docker_container_rollover_check is changed)
+    or
+    ( ( tag_to_force | default(False) ) in ansible_run_tags )
+  tags: "{{ [tag_to_force] if tag_to_force is defined else [] }}"
+  docker_container: "{{ container_spec }}"
+  vars:
+    serial: >-
+      {{ (_docker_container_rollover_last_serial.stdout | int) + 1
+      if _docker_container_rollover_last_serial.stdout != "null"
+      else 1 }}
+  register: _docker_container_rollover_container
+
+- name: "Wait for the new container to become healthy"
+  when: _docker_container_rollover_container is changed
+  changed_when: false
+  shell:
+    cmd: |
+      docker-ps-traefik -q --healthy |
+        grep {{ _docker_container_rollover_container.container.Config.Hostname }}
+  register: _docker_container_rollover_container_wait
+  until: >-
+    _docker_container_rollover_container_wait.stdout != ""
+  retries: 10
+
+- name: "Clean up old containers"
+  shell:
+    executable: /bin/bash
+    cmd: |
+      set -e -x
+      set -o pipefail
+      highlander=$(docker-ps-traefik -q --healthy \
+                     --label {{ unique_label }} | head -1)
+      if [ "$highlander" == "" ]; then
+        echo NOCHANGE
+        exit 0
+      fi
+
+      changed=
+      for container in $(docker-ps-traefik -q --label {{ unique_label }} \
+                             | grep -v "$highlander"); do
+          docker rm -f "$container"
+          changed=1
+      done
+
+      if [ -z "$changed" ]; then
+        echo NOCHANGE
+      fi
+  register: _docker_container_rollover_cleanup
+  changed_when: |
+    ( _docker_container_rollover_cleanup is not skipped )
+    and
+    ( "NOCHANGE" not in _docker_container_rollover_cleanup.stdout )
