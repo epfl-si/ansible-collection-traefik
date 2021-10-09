@@ -7,8 +7,9 @@ This role ensures that a docker container is set up according to a YAML spec (mu
 The `jq` and `docker-ps-traefik` commands must be installed on the target host. You can install the latter like this:
 
 ```
-- pip:
-    name: docker-ps-traefik
+- name: "docker-ps-traefik script"
+  pip:
+    name: docker_ps_traefik
 ```
 
 ## Usage
@@ -22,7 +23,7 @@ When invoking the role, you must pass it a couple of variables. For instance:
       # The container spec, as a dict that you could pass to  `community.docker.docker_container`
       container_spec:
         # You should put `{{ serial }}` somewhere in the container name, so that rollover
-        # works properly. The `epfl_si.traefik.docker_container_rollover` will take care
+        # works properly. The `epfl_si.traefik.docker_container_rollover` role takes care
         # of setting the appropriate value for `serial`.
         name: "busybox-{{ serial }}"
         image: "busybox"
