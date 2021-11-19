@@ -17,7 +17,7 @@ Minimum configuration:
 - name: Træfik
   hosts: all
   roles:
-    - role: roles/docker-traefik
+    - role: epfl_si.traefik.docker_traefik
   vars:
     traefik_root_location: /srv/traefik
 ```
