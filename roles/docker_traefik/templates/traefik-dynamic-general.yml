@@ -4,8 +4,10 @@
 # which Træfik insists should be dynamic
 
 tls:
-    certificates:
-      - certFile: "/etc/traefik/certs/{{ traefik_ssl_cert_path | basename }}"
+  stores:
+    default:
+      defaultCertificate:
+        certFile: "/etc/traefik/certs/{{ traefik_ssl_cert_path | basename }}"
         keyFile: "/etc/traefik/certs/private/{{ traefik_ssl_key_path | basename }}"
 
 {% if traefik_debug %}
