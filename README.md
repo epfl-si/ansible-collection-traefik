@@ -4,9 +4,9 @@ The [epfl_si.traefik collection on Ansible
 Galaxy](https://galaxy.ansible.com/epfl_si/traefik) helps you manage
 “poor man's Kubernetes” setups built out of Docker and Træfik.
 
-## `epfl_si.traefik.docker_traefik` Role
+## `epfl_si.traefik.traefik` Role
 
-Run Træfik in Docker, for Docker.
+Run Træfik in a container.  Supports Docker labels as a configuration source for Træefik.
 
 [More...](roles/docker_traefik/README.md)
 
