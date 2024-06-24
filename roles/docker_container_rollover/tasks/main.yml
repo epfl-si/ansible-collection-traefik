@@ -21,11 +21,7 @@
     (_docker_container_rollover_last_serial is defined)
     and
     (_docker_container_rollover_last_serial.stdout != "null")
-  # Given the sorry state of
-  # https://github.com/ansible/ansible/issues/62847, no, we're not
-  # interested in a fully-qualified task name on next line (sorry, not
-  # sorry):
-  docker_container: "{{ container_spec }}"
+  community.general.docker_container: "{{ container_spec }}"
   vars:
     serial: >-
       {{ _docker_container_rollover_last_serial.stdout | int }}
@@ -39,7 +35,7 @@
     or
     ( ( tag_to_force | default(False) ) in ansible_run_tags )
   tags: "{{ [tag_to_force] if tag_to_force is defined else [] }}"
-  docker_container: "{{ container_spec }}"
+  community.general.docker_container: "{{ container_spec }}"
   vars:
     serial: >-
       {{ (_docker_container_rollover_last_serial.stdout | int) + 1

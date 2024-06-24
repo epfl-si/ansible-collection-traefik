@@ -1,11 +1,11 @@
 - name: "{{ traefik_docker_image }} Docker image"
-  docker_image:
+  community.general.docker_image:
     name: "{{ traefik_docker_image }}"
     state: present
     source: pull
 
 - name: Start or restart traefik container
-  docker_container:
+  community.general.docker_container:
     name: "{{ traefik_container_name }}"
     image: "{{ traefik_docker_image }}"
     command:
