@@ -1,7 +1,35 @@
 - include_vars: traefik-private-vars.yml
   tags: always
 
-- import_tasks: traefik-tasks.yml
+- name: Træefik configuration
+  include_tasks:
+    file: traefik-config.yml
+    apply:
+      tags:
+        - traefik
+        - traefik.config
+  tags:
+    - traefik
+    - traefik.config
+
+- name: Træefik certificate
+  include_tasks:
+    file: traefik-certificate.yml
+    apply:
+      tags:
+        - traefik
+        - traefik.certificate
   tags:
     - traefik
     - traefik.certificate
+
+- name: Træfik container
+  include_tasks:
+    file: traefik-docker.yml
+    apply:
+      tags:
+        - traefik
+        - traefik.docker
+  tags:
+    - traefik
+    - traefik.docker

@@ -1,0 +1,23 @@
+# Set up Traefik on the serving VM
+
+- name: Traefik directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ traefik_root_location }}"
+    - "{{ traefik_static_config_file_path | dirname }}"
+    - "{{ traefik_dynamic_config_dir }}"
+
+- name: "Traefik static configuration"
+  template:
+    src: "traefik.yml"
+    dest: "{{ traefik_static_config_file_path }}"
+  notify: restart traefik
+
+- name: "Traefik dynamic configuration (general)"
+  template:
+    src: "traefik-dynamic-general.yml"
+    dest: "{{ traefik_dynamic_config_dir }}/traefik-dynamic-general.yml"
+
+- meta: flush_handlers
