@@ -2,7 +2,7 @@
 ## playbook must define these:
 ## - traefik_root_location
 
-traefik_docker_image: "traefik:v2.4"
+traefik_docker_image: "traefik:v3.0.3"
 traefik_container_name: traefik
 traefik_networks: []
 traefik_static_config_file_path: "{{ traefik_root_location }}/conf/traefik.yml"
