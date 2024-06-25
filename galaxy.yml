@@ -11,4 +11,4 @@ tags:
     - traefik
 repository: "https://github.com/epfl-si/ansible-collection-traefik"
 dependencies:
-  epfl_si.actions: ">=0.1.1"
+  epfl_si.actions: ">=1.1.0"
