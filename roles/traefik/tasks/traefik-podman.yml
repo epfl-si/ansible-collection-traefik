@@ -1,0 +1,39 @@
+- tags: always
+  include_vars: podman-vars.yml
+
+- name: "{{ traefik_podman_image }} Podman image"
+  containers.podman.podman_image:
+    name: "{{ traefik_podman_image }}"
+
+- name: "Systemd “quadlet” for Træfik ({{ traefik_podman_quadlet_config_file }})"
+  register: _podman_quadlet
+  copy:
+    dest: "{{ traefik_podman_quadlet_config_file }}"
+    content: >-
+      {{ lookup("template", "traefik.container", rstrip=False) }}
+
+- name: Quadlet syntax check
+  changed_when: false
+  shell:
+    cmd: |
+      set -e -x
+      TMP_DIR=$(mktemp -d)
+      trap 'rm -rf "$TMP_DIR"' EXIT
+
+      cd "$TMP_DIR"
+      cp "{{ traefik_podman_quadlet_config_file }}" .
+
+      export QUADLET_UNIT_DIRS=$PWD
+      /usr/lib/systemd/system-generators/podman-system-generator --dryrun
+
+- ansible.builtin.systemd_service:
+    name: "{{ traefik_podman_quadlet_name }}"
+    daemon_reload: "{{ _service_changed | bool }}"
+    enabled: true
+    state: >-
+      {{ "restarted" if ( _service_changed
+                          or (_traefik_restart_notified | default(False)) )
+         else "started" }}
+  vars:
+    _service_changed: >-
+      {{ ( (_podman_quadlet | default({})) is changed ) | bool }}

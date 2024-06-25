@@ -2,8 +2,10 @@
 ## playbook must define these:
 ## - traefik_root_location
 
-traefik_docker_image: "traefik:v3.0.3"
 traefik_container_name: traefik
+traefik_container_platform: docker   # One of "docker", "podman"
+traefik_docker_image: "traefik:v3.0.3"
+traefik_podman_image: "docker.io/library/{{ traefik_docker_image }}"
 
 # The Docker networks that the Docker container should connect to.
 # (`traefik_networks` is the obsolete name.)
@@ -12,8 +14,14 @@ traefik_docker_networks: "{{ traefik_networks | default([]) }}"
 # (`traefik_container_restart_policy` is the obsolete name.)
 traefik_docker_restart_policy: "{{ traefik_container_restart_policy | default('always') }}"
 
+traefik_podman_container_name: traefik
+traefik_podman_quadlet_name: "{{ traefik_podman_container_name }}"
+traefik_podman_quadlet_config_dir: /etc/containers/systemd
+traefik_podman_network_mode: host
+
 traefik_static_config_file_path: "{{ traefik_root_location }}/conf/traefik.yml"
 traefik_dynamic_config_dir: "{{ traefik_root_location }}/conf/dynamic"
+
 ## If true, the websecure entryPoint will *not* be fitted with a
 ## default http → tls section. This means that all containers
 ## (actually, all routers) are free to request TLS support
@@ -24,7 +32,7 @@ traefik_dynamic_config_dir: "{{ traefik_root_location }}/conf/dynamic"
 traefik_http_on_https_port: false
 
 ## Feature flags
-traefik_use_docker_labels: true
+traefik_use_docker_labels: true  # Ignored if traefik_container_platform is not "docker"
 traefik_produce_access_logs: true
 traefik_debug: false
 

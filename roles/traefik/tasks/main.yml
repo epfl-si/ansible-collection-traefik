@@ -23,7 +23,8 @@
     - traefik
     - traefik.certificate
 
-- name: Træfik container
+- name: Træfik Docker container
+  when: traefik_container_platform == "docker"
   include_tasks:
     file: traefik-docker.yml
     apply:
@@ -33,3 +34,15 @@
   tags:
     - traefik
     - traefik.docker
+
+- name: Træfik Podman container
+  when: traefik_container_platform == "podman"
+  include_tasks:
+    file: traefik-podman.yml
+    apply:
+      tags:
+        - traefik
+        - traefik.podman
+  tags:
+    - traefik
+    - traefik.podman

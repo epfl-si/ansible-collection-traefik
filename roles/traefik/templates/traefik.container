@@ -1,0 +1,13 @@
+{# “Quadlet”-format configuration file that makes systemd take
+ # care of (re)starting Træfik in a Podman container
+ #
+ # On quadlets: https://www.redhat.com/sysadmin/quadlet-podman
+ # Reference: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
+ #}
+[Container]
+Image={{ traefik_podman_image }}
+ContainerName={{ traefik_podman_container_name }}
+Network={{ traefik_podman_network_mode }}
+Volume={{ traefik_static_config_file_path }}:/etc/traefik/traefik.yml:ro
+Volume={{ traefik_dynamic_config_dir }}:/etc/traefik/dynamic:ro
+Volume={{ traefik_ssl_certs_location }}:/etc/traefik/certs:ro

@@ -3,6 +3,10 @@
 # So-called "static" configuration for Træfik.
 # Tweaking something here requires a restart.
 
+{% set _podman_with_host_network = (
+   traefik_container_platform == "podman"
+   and traefik_podman_network_mode == "host" ) %}
+
 {% if traefik_debug %}
 log:
   level: DEBUG
@@ -12,7 +16,11 @@ log:
 accessLog: {}
 {% endif %}
 
+{% if _podman_with_host_network %}
+# API is always open on port 8080, but it listens on localhost only
+{% else %}
 # API is always open on port 8080, but you don't have to expose it
+{% endif %}
 api:
   insecure: true
   dashboard: true
@@ -27,7 +35,7 @@ providers:
   file:
     directory: /etc/traefik/dynamic
     watch: true
-{% if traefik_use_docker_labels %}
+{% if traefik_container_platform == "docker" and traefik_use_docker_labels %}
   # Watch /var/run/docker/docker.sock for creation/removal of labeled
   # containers; deduce Træfik configuration therefrom
   docker:
@@ -43,6 +51,10 @@ entryPoints:
       redirections:
         entryPoint:
           to: ":{{ traefik_external_https_port }}"
+{% if _podman_with_host_network %}
+  traefik:
+    address: "127.0.0.1:8080"
+{% endif %}
 
   websecure:
     address: ":443"

@@ -1,0 +1,2 @@
+traefik_podman_quadlet_config_file: >-
+  {{ traefik_podman_quadlet_config_dir }}/{{ traefik_podman_quadlet_name }}.container
