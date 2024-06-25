@@ -1,3 +1,10 @@
+# Versions 0.4.x
+
+## Version 0.4.0
+
+- Support for Podman
+- `epfl_si.traefik.dynamic_config` action plugin
+
 # Versions 0.3.x
 
 ## Version 0.3.0

@@ -1,6 +1,6 @@
-# docker-traefik
+# `epfl_si.traefik.traefik` role
 
-Run Træfik in Docker, for Docker.
+Run Træfik in Docker or Podman.
 
 
 ## Platform Requirements
@@ -17,7 +17,7 @@ Minimum configuration:
 - name: Træfik
   hosts: all
   roles:
-    - role: epfl_si.traefik.docker_traefik
+    - role: epfl_si.traefik.traefik
   vars:
     traefik_root_location: /srv/traefik
 ```
