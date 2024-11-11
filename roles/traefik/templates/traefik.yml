@@ -13,7 +13,8 @@ log:
 {% endif %}
 
 {% if traefik_produce_access_logs %}
-accessLog: {}
+accessLog:
+  format: json
 {% endif %}
 
 {% if _podman_with_host_network %}
