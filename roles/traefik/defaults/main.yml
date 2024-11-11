@@ -53,3 +53,11 @@ traefik_rsa_key_size: 2048
 traefik_certificate_selfsigned_subject: "/CN=traefik"
 traefik_certificate_selfsigned: true
 traefik_certificate_selfsigned_validity_days: 3650
+
+## Be sure to make ACME work before you turn this one!
+## Or be prepared to adjourn your hacking session until you get
+## out of the blacklist.
+## ⚠ switching ACME CAs will require deleting and recreating your
+## Træfik container, so that the `/acme.json` therein gets
+## regenerated.
+traefik_use_acme_prod_ca: false

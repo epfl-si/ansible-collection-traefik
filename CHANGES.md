@@ -1,5 +1,11 @@
 # Versions 0.4.x
 
+## Version 0.5.0
+
+- Support for Let's Encrypt a.k.a. ACME
+  - Set up one (or more) of your routers as per https://doc.traefik.io/traefik/routing/routers/#certresolver
+  - Once this works (but not before!) set `traefik_use_acme_prod_ca` to `true`
+
 ## Version 0.4.0
 
 - Support for Podman

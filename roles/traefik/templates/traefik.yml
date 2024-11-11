@@ -63,3 +63,11 @@ entryPoints:
     http:
       tls: {}
 {% endif %}
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      tlsChallenge: {}
+{% if not traefik_use_acme_prod_ca %}
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+{% endif %}
