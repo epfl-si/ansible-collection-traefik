@@ -34,9 +34,8 @@ class ActionModule(ActionBase):
         subaction = Subaction(ansible_api)
         subaction.result = result
 
-        traefik_dir = ansible_api.expand_var(
-            "{{ traefik_dynamic_config_dir }}",
-            defaults=dict(traefik_dynamic_config_dir="{{ traefik_root_location }}/conf/dynamic"))
+        traefik_dir = ansible_api.jinja.expand(
+            '{{ traefik_dynamic_config_dir | default(traefik_root_location + "/conf/dynamic") }}')
 
         subaction.change(
             "ansible.builtin.copy",
