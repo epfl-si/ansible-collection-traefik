@@ -28,6 +28,9 @@ api:
 
 metrics:
   prometheus: {}
+{% if traefik_metrics_add_internals %}
+  addInternals: true
+{% endif %}
 
 # So-called “dynamic” configuration providers, which feed in
 # the rest of the configuration

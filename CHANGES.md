@@ -1,4 +1,8 @@
-# Versions 0.4.x
+# Versions
+
+## Version 0.6.0
+
+- Add variable to enable metrics for internal resources (`traefik_metrics_add_internals`)
 
 ## Version 0.5.0
 
