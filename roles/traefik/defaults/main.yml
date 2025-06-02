@@ -36,6 +36,8 @@ traefik_use_docker_labels: true  # Ignored if traefik_container_platform is not 
 traefik_produce_access_logs: true
 traefik_debug: false
 
+traefik_metrics_add_internals: false
+
 traefik_log_max_size: 50m
 traefik_log_rotate_keep_number: 3
 
