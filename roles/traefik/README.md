@@ -23,3 +23,13 @@ Minimum configuration:
 ```
 
 See `defaults/main.yml` for all the variables you can tweak.
+
+# Tags
+
+| Tag    | Purpose |
+| -------- | ------- |
+| `-t traefik`  | Run all tasks in the role (and nothing else from the rest of your playbook, presumably) |
+| `-t traefik.config`  | Create or update configuration files only |
+| `-t traefik.certificate`  | Create or update private key and certificate (self-signed by default; set `traefik_certificate_selfsigned` to `false` if you want a real certificate) |
+| `-t traefik.docker`  | Set up image and container (Docker platform; the default) |
+| `-t traefik.podman`  | Set up image and container for the Podman platform (requires setting `traefik_container_platform: podman`) |
