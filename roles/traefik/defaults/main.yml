@@ -4,7 +4,7 @@
 
 traefik_container_name: traefik
 traefik_container_platform: docker   # One of "docker", "podman"
-traefik_docker_image: "traefik:v3.0.3"
+traefik_docker_image: "traefik:v3.5.3"
 traefik_podman_image: "docker.io/library/{{ traefik_docker_image }}"
 
 # The Docker networks that the Docker container should connect to.
