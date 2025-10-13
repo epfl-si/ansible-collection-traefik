@@ -1,5 +1,10 @@
 # Versions
 
+## Version 0.6.1
+
+- Bump to latest version of Træfik
+- Document tags
+
 ## Version 0.6.0
 
 - Add variable to enable metrics for internal resources (`traefik_metrics_add_internals`)
