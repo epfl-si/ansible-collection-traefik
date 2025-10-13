@@ -1,5 +1,10 @@
 # Versions
 
+## Version 0.7.0
+
+- `traefik_ssl_*` variables renamed `traefik_tls_*` (although the old names remain supported,
+  until we bump the major version)
+
 ## Version 0.6.1
 
 - Bump to latest version of Træfik

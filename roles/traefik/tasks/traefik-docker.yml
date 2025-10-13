@@ -35,7 +35,9 @@
       source: "{{ traefik_dynamic_config_dir }}"
       target: /etc/traefik/dynamic
     - type: bind
-      source: "{{ traefik_ssl_certs_location }}"
+      # We still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
+      # for the rest of the 0.x version lifecycle:
+      source: "{{ traefik_ssl_certs_location | default(traefik_tls_certs_location) }}"
       target: /etc/traefik/certs
     mount_docker_sock:
     - type: bind

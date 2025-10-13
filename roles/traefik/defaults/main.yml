@@ -42,10 +42,10 @@ traefik_log_max_size: 50m
 traefik_log_rotate_keep_number: 3
 
 ## If you pre-populate these files, the role won't override them.
-traefik_ssl_certs_location: "{{ traefik_root_location }}/certs"
-traefik_ssl_keys_location: "{{ traefik_root_location }}/certs/private"
-traefik_ssl_key_path: "{{ traefik_ssl_keys_location }}/key.pem"
-traefik_ssl_cert_path: "{{ traefik_ssl_certs_location }}/cert.pem"
+traefik_tls_certs_location: "{{ traefik_root_location }}/certs"
+traefik_tls_keys_location: "{{ traefik_root_location }}/certs/private"
+traefik_tls_key_path: "{{ traefik_tls_keys_location }}/key.pem"
+traefik_tls_cert_path: "{{ traefik_tls_certs_location }}/cert.pem"
 
 ## traefik_external_http_port is not defined by default. If it is,
 ## then it 302's everything to traefik_https_port.

@@ -1,36 +1,39 @@
-- name: "{{ traefik_ssl_cert_path | dirname }}"
+# Note: we still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
+# for the rest of the 0.x version lifecycle.
+
+- name: "{{ traefik_ssl_cert_path | default(traefik_tls_cert_path) | dirname }}"
   file:
-    path: "{{ traefik_ssl_cert_path | dirname }}"
+    path: "{{ traefik_ssl_cert_path | default(traefik_tls_cert_path) | dirname }}"
     state: directory
 
-- name: "Does {{ traefik_ssl_key_path | dirname }} already exist?"
+- name: "Does {{ traefik_ssl_key_path | default(traefik_tls_key_path) | dirname }} already exist?"
   stat:
-    path: "{{ traefik_ssl_key_path | dirname }}"
-  register: _traefik_ssl_key_dir
+    path: "{{ traefik_ssl_key_path | default(traefik_tls_key_path) | dirname }}"
+  register: _traefik_tls_key_dir
 
-- name: "Create {{ traefik_ssl_key_path | dirname }}"
+- name: "Create {{ traefik_ssl_key_path | default(traefik_tls_key_path) | dirname }}"
   when: >-
-    (_traefik_ssl_key_dir is defined)
+    (_traefik_tls_key_dir is defined)
     and
-    (_traefik_ssl_key_dir.stat is defined)
+    (_traefik_tls_key_dir.stat is defined)
     and
-    (not _traefik_ssl_key_dir.stat.exists)
+    (not _traefik_tls_key_dir.stat.exists)
   file:
-    path: "{{ traefik_ssl_key_path | dirname }}"
+    path: "{{ traefik_tls_key_path | dirname }}"
     state: directory
     mode: "0700"
 
 # No, we don't want to install Rust on the target machine
 # just so that we can have PyOpenSSL.
-- name: Træfik SSL private key
+- name: Træfik TLS private key
   shell:
     cmd: |
       set -e -x
-      if test -f "{{ traefik_ssl_key_path }}"; then
+      if test -f "{{ _traefik_tls_key_path }}"; then
         echo NOCHANGE
         exit 0
       fi
-      openssl genrsa "{{ traefik_rsa_key_size }}" > "{{ traefik_ssl_key_path }}"
+      openssl genrsa "{{ traefik_rsa_key_size }}" > "{{ _traefik_tls_key_path }}"
   register: _traefik_private_key
   changed_when: |
     ( _traefik_private_key is defined )
@@ -38,20 +41,23 @@
     ( _traefik_private_key.stdout is defined )
     and
     ( "NOCHANGE" not in _traefik_private_key.stdout)
+  vars:
+   _traefik_tls_key_path: >-
+     {{ traefik_ssl_key_path | default(traefik_tls_key_path) }}
 
 - name: "Træfik self-signed certificate"
   when: traefik_certificate_selfsigned
   shell:
     cmd: |
       set -e -x
-      if test -f "{{ traefik_ssl_cert_path }}"; then
+      if test -f "{{ traefik_tls_cert_path }}"; then
         echo NOCHANGE
         exit 0
       fi
 
       openssl req -x509 -new -sha256 \
-        -key "{{ traefik_ssl_key_path }}" \
-        -out "{{ traefik_ssl_cert_path }}" \
+        -key "{{ traefik_tls_key_path }}" \
+        -out "{{ traefik_tls_cert_path }}" \
         -days {{ traefik_certificate_selfsigned_validity_days }} \
         -batch -subj "{{ traefik_certificate_selfsigned_subject }}"
   register: _traefik_selfsigned_cert
@@ -61,7 +67,12 @@
     ( _traefik_selfsigned_cert.stdout is defined )
     and
     ( "NOCHANGE" not in _traefik_selfsigned_cert.stdout)
+  vars:
+   _traefik_tls_key_path: >-
+     {{ traefik_ssl_key_path | default(traefik_tls_key_path) }}
+   _traefik_tls_cert_path: >-
+     {{ traefik_ssl_cert_path | default(traefik_tls_cert_path) }}
 
 - name: "Træfik certificate must exist"
   stat:
-    path: "{{ traefik_ssl_cert_path }}"
+    path: "{{ traefik_tls_cert_path }}"
