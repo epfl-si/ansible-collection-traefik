@@ -8,7 +8,7 @@ Galaxy](https://galaxy.ansible.com/epfl_si/traefik) helps you manage
 
 Run Træfik in a container.  Supports Docker labels as a configuration source for Træefik.
 
-[More...](roles/docker_traefik/README.md)
+[More...](roles/traefik/README.md)
 
 ## `epfl_si.traefik.docker_container_rollover` Role
 
