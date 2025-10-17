@@ -37,7 +37,7 @@ metrics:
 providers:
   # Dynamic configuration in files
   file:
-    directory: /etc/traefik/dynamic
+    directory: ":{{ traefik_dynamic_config_dir }}"
     watch: true
 {% if traefik_container_platform == "docker" and traefik_use_docker_labels %}
   # Watch /var/run/docker/docker.sock for creation/removal of labeled
