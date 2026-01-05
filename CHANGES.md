@@ -1,6 +1,6 @@
 # Versions
 
-## Version 0.7.2
+## Version 0.7.3
 
 - Don't set rule priority for dashboard routes by default
 
