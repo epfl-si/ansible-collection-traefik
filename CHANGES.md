@@ -1,5 +1,9 @@
 # Versions
 
+## Version 0.7.1
+
+- Support arbitrary file layout under `traefik_tls_certs_location`
+
 ## Version 0.7.0
 
 - `traefik_ssl_*` variables renamed `traefik_tls_*` (although the old names remain supported,

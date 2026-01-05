@@ -1,6 +1,6 @@
 namespace: "epfl_si"
 name: "traefik"
-version: "0.7.0"
+version: "0.7.1"
 readme: "README.md"
 description: "Manage Træfik in basic configurations (HTTP and HTTP/S multiplexing on standard ports)"
 authors:
