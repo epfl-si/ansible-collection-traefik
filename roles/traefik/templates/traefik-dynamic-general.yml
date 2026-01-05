@@ -3,12 +3,13 @@
 # General-purpose configuration (independent from back-ends)
 # which Træfik insists should be dynamic
 
+{% set _certs_vol = "^%s" % ( traefik_ssl_certs_location | default(traefik_tls_certs_location) | regex_escape ) %}
 tls:
   stores:
     default:
       defaultCertificate:
-        certFile: "/etc/traefik/certs/{{ traefik_tls_cert_path | basename }}"
-        keyFile: "/etc/traefik/certs/private/{{ traefik_tls_key_path | basename }}"
+        certFile: "{{ traefik_ssl_cert_path | default(traefik_tls_cert_path) | regex_replace(_certs_vol, '/etc/traefik/certs') }}"
+        keyFile: "{{ traefik_ssl_key_path   | default(traefik_tls_key_path)  | regex_replace(_certs_vol, '/etc/traefik/certs') }}"
 
 {% if traefik_debug %}
 http:
