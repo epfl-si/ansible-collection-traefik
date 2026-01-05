@@ -15,13 +15,13 @@ tls:
 http:
   routers:
     debugonly-api:
-      priority: 100
+      priority: {{ traefik_dashboard_rules_priority | default(0) }}
       entrypoints:
         - websecure
       rule: "PathPrefix(`/api`)"
       service: api@internal
     debugonly-dashboard:
-      priority: 100
+      priority: {{ traefik_dashboard_rules_priority | default(0) }}
       entrypoints:
         - websecure
       rule: "PathPrefix(`/dashboard`)"
