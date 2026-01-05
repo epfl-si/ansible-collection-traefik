@@ -10,6 +10,6 @@ ContainerName={{ traefik_podman_container_name }}
 Network={{ traefik_podman_network_mode }}
 Volume={{ traefik_static_config_file_path }}:/etc/traefik/traefik.yml:ro
 Volume={{ traefik_dynamic_config_dir }}:/etc/traefik/dynamic:ro
-# Note: we still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
-# for the rest of the 0.x version lifecycle.
+{# Note: we still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
+ # for the rest of the 0.x version lifecycle. #}
 Volume={{ traefik_ssl_certs_location | default(traefik_tls_certs_location) }}:/etc/traefik/certs:ro
