@@ -1,5 +1,5 @@
-{# Note: we still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
- # for the rest of the 0.x version lifecycle. #}
+# Note: we still support traefik_ssl_* vars as alternative names for traefik_tls_* vars,
+# for the rest of the 0.x version lifecycle.
 
 - name: "{{ traefik_ssl_cert_path | default(traefik_tls_cert_path) | dirname }}"
   file:
