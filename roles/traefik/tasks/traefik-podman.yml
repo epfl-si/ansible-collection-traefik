@@ -36,4 +36,4 @@
          else "started" }}
   vars:
     _service_changed: >-
-      {{ ( (_podman_quadlet | default({})) is changed ) | bool }}
+      {{ (_podman_quadlet | default({})) is changed }}
